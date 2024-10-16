@@ -10,11 +10,11 @@ interface CartItem {
   price: string;
   quantity: number;
   image: any;
-  selected: boolean; // Thêm thuộc tính để theo dõi trạng thái đã chọn
+  selected: boolean;
 }
 
 const initialCartItems: CartItem[] = [
-  { id: '1', name: 'Bò Bía', price: '100.000đ', quantity: 2, image: require('@/assets/images/Sanpham1.png'), selected: false },
+  { id: '1', name: 'Bò Bía', price: '100.000000đ', quantity: 2, image: require('@/assets/images/Sanpham1.png'), selected: false },
   { id: '2', name: 'Chả Cá/miếng', price: '150.000đ', quantity: 1, image: require('@/assets/images/Sản phẩm 2.png'), selected: false },
   { id: '3', name: 'Xíu Mại/Viên', price: '200.000đ', quantity: 1, image: require('@/assets/images/Sanpham3.png'), selected: false },
 ];
