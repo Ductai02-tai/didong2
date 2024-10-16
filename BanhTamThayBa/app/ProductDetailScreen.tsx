@@ -23,7 +23,7 @@ type RelatedProduct = {
 };
 
 const relatedProducts: RelatedProduct[] = [
-  { id: '1', name: 'Bò Bía', price: '100.000đ', image: require('@/assets/images/Sản phẩm 1.png') },
+  { id: '1', name: 'Bò Bía', price: '100.000.000đ', image: require('@/assets/images/Sản phẩm 1.png') },
   { id: '2', name: 'Chả Cá/miếng', price: '150.000đ', image: require('@/assets/images/Sản phẩm 2.png') },
   { id: '3', name: 'Xíu Mại/Viên', price: '200.000.000đ', image: require('@/assets/images/Sản phẩm 3.png') },
   // Thêm sản phẩm khác
