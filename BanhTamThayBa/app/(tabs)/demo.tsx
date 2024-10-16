@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { StyleSheet, Image, View, Text, TextInput, TouchableOpacity } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
- 
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+
+type RootStackParamList = {
+  Register: undefined; // Định nghĩa màn hình Register 
+};
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const navigateToRegister = () => {
     navigation.navigate('Register');
@@ -49,14 +52,9 @@ export default function Login() {
 
       <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
       <Text style={styles.forgotPasswordText}>Bạn chưa có tài khoản?
-      <TouchableOpacity onPress={navigateToRegister}>
-      <Text 
-        style={styles.textRegister}> Đăng ký
-        </Text>
+        <TouchableOpacity onPress={navigateToRegister}>
+          <Text style={styles.textRegister}> Đăng ký</Text>
         </TouchableOpacity>
-     
-        
-     
       </Text>
 
       <View style={styles.socialButton}>
@@ -84,8 +82,8 @@ const styles = StyleSheet.create({
     width: 350,
     height: 200,
     resizeMode: 'contain',
-    marginTop: 20,  // Giảm khoảng cách phía trên của logo
-    marginBottom: 10,  // Giảm khoảng cách giữa logo và tiêu đề
+    marginTop: 20,
+    marginBottom: 10,
   },
   input: {
     width: '100%',

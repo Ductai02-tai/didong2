@@ -1,181 +1,114 @@
-import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList, ScrollView } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
-import { Dimensions } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import axios from 'axios';
+import { useRoute } from '@react-navigation/native';
 
-const { width } = Dimensions.get('window');
+// Định nghĩa interface cho params
+interface RouteParams {
+  productId: string; // hoặc number nếu productId là số
+}
 
- 
-type Product = {
-  name: string;
-  price: string;
-  image: any;  
+// Đường dẫn hình ảnh
+const imageMap: { [key: string]: any } = {
+  'Sanpham1.png': require('../assets/images/Sanpham1.png'),
+  'Sanpham4.png': require('../assets/images/Sanpham4.png'),
+  'banhmi.png': require('../assets/images/banhmi.png'),
+  'Sanpham3.png': require('../assets/images/Sanpham3.png'),
+  'Sanpham6.png': require('../assets/images/Sanpham6.png'),
+  'nuocu.png': require('../assets/images/nuocu.png'),
+  'banhmi77.png': require('../assets/images/banhmi77.png'),
+  default: require('../assets/images/logoba.png'), // Hình ảnh mặc định
 };
-
-type ProductDetailScreenRouteProp = RouteProp<{ params: { product: Product } }, 'params'>;
-
- 
-type RelatedProduct = {
-  id: string;
-  name: string;
-  price: string;
-  image: any;  
-};
-
-const relatedProducts: RelatedProduct[] = [
-  { id: '1', name: 'Bò Bía', price: '100.000.000đ', image: require('@/assets/images/Sản phẩm 1.png') },
-  { id: '2', name: 'Chả Cá/miếng', price: '150.000đ', image: require('@/assets/images/Sản phẩm 2.png') },
-  { id: '3', name: 'Xíu Mại/Viên', price: '200.000.000đ', image: require('@/assets/images/Sản phẩm 3.png') },
-  // Thêm sản phẩm khác
-];
 
 const ProductDetailScreen = () => {
-  const route = useRoute<ProductDetailScreenRouteProp>();
-  const { product } = route.params;  
+  const route = useRoute();
+  const { productId } = route.params as RouteParams; // Ép kiểu params
+  const [product, setProduct] = useState<any>(null);
+  const [error, setError] = useState('');
 
-  const [quantity, setQuantity] = useState(1);
+  useEffect(() => {
+    const fetchProductDetail = async () => {
+      try {
+        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3Mjg5Nzg5MTIsImV4cCI6MTcyOTA2NTMxMn0.UNj4mMxI2y__wJ_yqoUl4SLYXLXYjTuCAPPwhAdn1rc'; // Thay thế bằng token thực tế
+        const response = await axios.get(`http://172.20.10.8:8080/api/products/${productId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setProduct(response.data);
+      } catch (error) {
+        console.error('Error fetching product detail:', error);
+        setError('Error fetching product detail');
+      }
+    };
 
-  const increaseQuantity = () => {
-    setQuantity(prevQuantity => prevQuantity + 1);
-  };
+    fetchProductDetail();
+  }, [productId]);
 
-  const decreaseQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(prevQuantity => prevQuantity - 1);
-    }
-  };
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text>{error}</Text>
+      </View>
+    );
+  }
 
-   
-  const renderRelatedProduct = ({ item }: { item: RelatedProduct }) => (
-    <TouchableOpacity style={styles.relatedProductContainer}>
-      <Image source={item.image} style={styles.relatedProductImage} />
-      <Text style={styles.relatedProductName}>{item.name}</Text>
-      <Text style={styles.relatedProductPrice}>{item.price}</Text>
-    </TouchableOpacity>
-  );
+  if (!product) {
+    return (
+      <View style={styles.container}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  // Lấy hình ảnh từ imageMap
+  const imageSource = imageMap[product.photo] || imageMap.default;
 
   return (
-    <ScrollView style={{ flex: 1 }}>
-      <Image source={product.image} style={styles.productImage} />
-      <Text style={styles.productName}>{product.name}</Text>
-      <Text style={styles.productPrice}>{product.price}</Text>
-      <View style={styles.quantitySelector}>
-        <TouchableOpacity style={styles.button} onPress={decreaseQuantity}>
-          <Text style={styles.buttonText}>-</Text>
-        </TouchableOpacity>
-        <Text style={styles.quantityText}>{quantity}</Text>
-        <TouchableOpacity style={styles.button} onPress={increaseQuantity}>
-          <Text style={styles.buttonText}>+</Text>
-        </TouchableOpacity>
-      </View>
-      <TouchableOpacity style={styles.orderButton}>
-        <Text style={styles.orderButtonText}>Đặt Món</Text>
-      </TouchableOpacity>
-      <Text style={styles.descriptionTitle}>Mô tả:</Text>
-      <Text style={styles.descriptionText}>
-        {/* Thêm mô tả sản phẩm tại đây */}
+    <View style={styles.container}>
+      <Image source={imageSource} style={styles.productImage} />
+      <Text style={styles.productTitle}>{product.title}</Text>
+      <Text style={styles.productPrice}>
+        {parseFloat(product.price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
       </Text>
-      <Text style={styles.relatedProductsTitle}>Sản phẩm liên quan</Text>
-      <FlatList
-        data={relatedProducts}
-        renderItem={renderRelatedProduct}
-        keyExtractor={(item) => item.id}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-      />
-    </ScrollView>
+      <Text style={styles.productDescription}>{product.description}</Text>
+      <TouchableOpacity style={styles.orderButton}>
+        <Text style={styles.orderButtonText}>Đặt món</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    padding: 16,
   },
   productImage: {
-    width: width,
-    height: 330,
-    resizeMode: 'cover',
+    width: '100%',
+    height: 400,
+    marginBottom: 16,
   },
-  productName: {
+  productTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginVertical: 10,
-    textAlign: 'center',
   },
   productPrice: {
     fontSize: 20,
-    color: 'red',
-    textAlign: 'center',
+    color: 'green',
   },
-  quantitySelector: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 15,
-  },
-  quantityText: {
-    width: 60,
-    textAlign: 'center',
-    fontSize: 15,
-  },
-  button: {
-    width: 50,
-    alignItems: 'center',
-    backgroundColor: '#fec524',
-    padding: 7,
-    borderRadius: 2,
-    marginHorizontal: 8,
-  },
-  buttonText: {
-    fontSize: 18,
+  productDescription: {
+    fontSize: 16,
+    marginVertical: 8,
   },
   orderButton: {
-    backgroundColor: '#fec524',
-    paddingVertical: 15,
-    paddingHorizontal: 150,
-    borderRadius: 5,
-    marginVertical: 20,
-    alignSelf: 'center',
+    backgroundColor: 'orange',
+    padding: 12,
+    alignItems: 'center',
   },
   orderButtonText: {
-    color: '#000',
-    fontSize: 19,
-  },
-  descriptionTitle: {
+    color: 'white',
     fontSize: 18,
-    marginVertical: 10,
-    paddingHorizontal: 20,
-  },
-  descriptionText: {
-    fontSize: 16,
-    marginBottom: 20,
-    paddingHorizontal: 20,
-    textAlign: 'justify',
-  },
-  relatedProductsTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginVertical: 10,
-    paddingHorizontal: 20,
-  },
-  relatedProductContainer: {
-    marginRight: 15,
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  relatedProductImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 10,
-  },
-  relatedProductName: {
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  relatedProductPrice: {
-    fontSize: 12,
-    color: 'gray',
   },
 });
 

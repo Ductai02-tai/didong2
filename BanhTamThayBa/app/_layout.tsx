@@ -49,7 +49,22 @@ export default function RootLayout() {
           }}
           
         />
+
+<Stack.Screen
+          name="ProductList"
+          options={{
+            headerTitle: '', // Ẩn chữ "ProductDetail"
+           
+         
+          }}
+          
+        />
+
       </Stack>
+
+      
+
+      
     </ThemeProvider>
   );
 }

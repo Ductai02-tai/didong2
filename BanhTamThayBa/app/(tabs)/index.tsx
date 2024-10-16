@@ -1,31 +1,46 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Image, TouchableOpacity, TextInput, Modal, StyleSheet, ScrollView, Dimensions, FlatList } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  TextInput,
+  Modal,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  FlatList,
+  SafeAreaView,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
+import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 
- 
+// Định nghĩa kiểu sản phẩm
 interface Product {
-  id: string;
-  name: string;
-  price: string;
-  image: any;
+  id: number;  
+  title: string;
+  description: string;
+  photo: string;
+  price: string; // Điều chỉnh kiểu nếu cần (number, string, v.v.)
 }
- 
-const products = [
-  { id: '1', name: 'Bò Bía', price: '100.000đ', image: require('@/assets/images/Sản phẩm 1.png') },
-  { id: '2', name: 'Chả Cá/miếng', price: '150.000đ', image: require('@/assets/images/Sản phẩm 2.png') },
-  { id: '3', name: 'Xíu Mại/Viên', price: '200.000đ', image: require('@/assets/images/Sản phẩm 3.png') },
-  { id: '4', name: 'Bánh Tằm Bì Xíu Mại', price: '250.000đ', image: require('@/assets/images/Sản phẩm 4.png') },
-  { id: '5', name: 'Yaourt/Chai', price: '250.000đ', image: require('@/assets/images/Sản phẩm 5.png') },
-  { id: '6', name: 'Chả giòn chiên/cuốn', price: '250.000đ', image: require('@/assets/images/Sản phẩm 6.png') },
-];
 
+
+interface Category {
+  id: number; 
+  title: string;
+}
+  
 export default function HomeScreen() {
   const [isMenuVisible, setMenuVisible] = useState(false);
   const [isSearchVisible, setSearchVisible] = useState(false);
   const [currentBanner, setCurrentBanner] = useState(0);
+  const [products, setProducts] = useState<Product[]>([]); // State để lưu trữ sản phẩm
+  const [categories, setCategories] = useState<Category[]>([]);
+ 
+  const [error, setError] = useState(''); // State cho việc xử lý lỗi
   const scrollViewRef = useRef<ScrollView>(null);
   const navigation = useNavigation<NavigationProp<any>>();
 
@@ -38,14 +53,48 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
+    // Gọi API để lấy sản phẩm
+    const fetchProducts = async () => {
+      try {
+        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3Mjg5Nzg5MTIsImV4cCI6MTcyOTA2NTMxMn0.UNj4mMxI2y__wJ_yqoUl4SLYXLXYjTuCAPPwhAdn1rc'; // Thay thế bằng quản lý token thực tế
+        const response = await axios.get('http://172.20.10.8:8080/api/products', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setProducts(response.data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setError('Error fetching products'); // Đặt thông báo lỗi
+      }
+    };
+
+    //API categori
+    const fetchCategories = async () => {
+      try {
+        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3Mjg5Nzg5MTIsImV4cCI6MTcyOTA2NTMxMn0.UNj4mMxI2y__wJ_yqoUl4SLYXLXYjTuCAPPwhAdn1rc'; // Thay thế bằng quản lý token thực tế
+        const response = await axios.get('http://172.20.10.8:8080/api/categories', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+       
+        setCategories(response.data);
+       } catch (error) {
+        console.error('Error fetching categories:', error);
+        setError('Error fetching categories');
+      }
+    };
+
+    fetchProducts();
+    fetchCategories();
+
     const interval = setInterval(() => {
       setCurrentBanner((prevBanner) => {
         const nextBanner = prevBanner === 3 ? 0 : prevBanner + 1;
-
         if (scrollViewRef.current) {
           scrollViewRef.current.scrollTo({ x: nextBanner * width, animated: true });
         }
-
         return nextBanner;
       });
     }, 4000);
@@ -53,23 +102,53 @@ export default function HomeScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  const renderProduct = ({ item }: { item: Product }) => (
-    <TouchableOpacity 
-      style={styles.productContainer}
-      onPress={() => navigation.navigate('ProductDetailScreen', { product: item })} 
-    >
-      <Image source={item.image} style={styles.productImage} />
-      <View style={styles.productInfo}>
-        <Text style={styles.productName}>{item.name}</Text>
-        <View style={styles.productDetails}>
-          <Text style={styles.productPrice}>{item.price}</Text>
-          <TouchableOpacity style={styles.orderButton}>
-            <Text style={styles.orderButtonText}>Đặt món +</Text>
-          </TouchableOpacity>
+  const imageMap: { [key: string]: any } = {
+    'Sanpham1.png': require('../../assets/images/Sanpham1.png'),
+    'Sanpham4.png': require('../../assets/images/Sanpham4.png'),
+    'banhmi.png': require('../../assets/images/banhmi.png'),
+    'Sanpham3.png': require('../../assets/images/Sanpham3.png'),
+    'Sanpham6.png': require('../../assets/images/Sanpham6.png'),
+    'nuocu.png': require('../../assets/images/nuocu.png'),
+    'banhmi77.png': require('../../assets/images/banhmi77.png'),
+    default: require('../../assets/images/logoba.png'), // Đường dẫn tương đối
+  };
+  
+  const renderProduct = ({ item }: { item: Product }) => {
+    const imageSource = imageMap[item.photo] || imageMap.default;
+  
+    return (
+      <TouchableOpacity
+        style={styles.productContainer}
+        onPress={() => navigation.navigate('ProductDetailScreen', { productId: item.id })} // Truyền ID sản phẩm
+      >
+        <Image
+          source={imageSource}
+          style={styles.productImage}
+          resizeMode="cover"
+        />
+        <View style={styles.productInfo}>
+          <Text style={styles.productName}>{item.title}</Text>
+          <View style={styles.productDetails}>
+            <Text style={styles.productPrice}>
+              {parseFloat(item.price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
+            </Text>
+            <TouchableOpacity style={styles.orderButton}>
+              <Text style={styles.orderButtonText}>Đặt món +</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
+  
+  
+
+  
+  
+  
+  
+  
+
 
   return (
     <View style={{ flex: 1 }}>
@@ -96,27 +175,32 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Menu Modal */}
-      <Modal transparent={true} visible={isMenuVisible} animationType="slide">
-        <TouchableOpacity style={styles.modalBackground} onPress={toggleMenu}>
-          <View style={styles.menu}>
-            <Text style={styles.menuItem}>TRANG CHỦ</Text>
-            <Text style={styles.menuItem}>SẢN PHẨM</Text>
-            <Text style={styles.menuItem}>GIỚI THIỆU</Text>
-            <Text style={styles.menuItem}>LIÊN HỆ</Text>
-            <Text style={styles.menuItem}>TUYỂN DỤNG</Text>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+<Modal transparent={true} visible={isMenuVisible} animationType="slide">
+  <TouchableOpacity style={styles.modalBackground} onPress={toggleMenu}>
+    <View style={styles.menu}>
+      <Text style={styles.menuItem}>TRANG CHỦ</Text>
+      <TouchableOpacity onPress={() => {
+        toggleMenu(); // Đóng menu
+        navigation.navigate('ProductList'); // Điều hướng đến ProductList
+      }}>
+        <Text style={styles.menuItem}>SẢN PHẨM</Text>
+      </TouchableOpacity>
+      <Text style={styles.menuItem}>GIỚI THIỆU</Text>
+      <Text style={styles.menuItem}>LIÊN HỆ</Text>
+      <Text style={styles.menuItem}>TUYỂN DỤNG</Text>
+    </View>
+  </TouchableOpacity>
+</Modal>
+
 
       {/* Main Content */}
       <FlatList
-        data={products}
-        renderItem={renderProduct}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.productList}
+         data={products}
+         renderItem={renderProduct}
+         keyExtractor={(item) => item.id.toString()} // Đảm bảo thuộc tính 'id' có sẵn
+         numColumns={2}
+         showsVerticalScrollIndicator={false}
+         contentContainerStyle={styles.productList}
         ListHeaderComponent={
           <View style={{ flex: 1 }}>
             {/* Banners */}
@@ -153,20 +237,18 @@ export default function HomeScreen() {
                 <Image source={require('@/assets/images/img_home_banner_1.png')} style={styles.homeBanner} />
                 <Image source={require('@/assets/images/img_home_banner_3.png')} style={styles.homeBanner} />
               </View>
-              <View style={styles.menuSection}>
-                <Text style={styles.menuTitle}>Menu</Text>
-                <View style={styles.menuCategories}>
-                  <TouchableOpacity style={styles.categoryButton}>
-                    <Text style={styles.categoryText}>Món Chính</Text>
+             {/* Menu Section */}
+            <View style={styles.menuSection}>
+              <Text style={styles.menuTitle}>Menu</Text>
+              <View style={styles.menuCategories}>
+                {categories.map((category) => (
+                  <TouchableOpacity key={category.id} style={styles.categoryButton}>
+                    <Text style={styles.categoryText}>{category.title}</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.categoryButton}>
-                    <Text style={styles.categoryText}>Món Phụ</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.categoryButton}>
-                    <Text style={styles.categoryText}>Nước Uống</Text>
-                  </TouchableOpacity>
-                </View>
+                ))}
               </View>
+            </View>
+           
 
             </View>
 
@@ -292,7 +374,9 @@ const styles = StyleSheet.create({
   productList: {
     paddingHorizontal: 10,
     paddingBottom: 20,
+    justifyContent: 'center',  
   },
+  
   productContainer: {
     alignItems: 'center',
     marginHorizontal: 10,
@@ -301,7 +385,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 10,
     padding: 10,
-    width: (width / 2) - 20,  // Tính toán căn đúng 2 cột
+    width: (width / 2) - 30,  // Tính toán căn đúng 2 cột
   },
   productImage: {
     width: '100%',
@@ -409,9 +493,9 @@ categoryButton: {
   marginBottom: 35,
 },
 categoryText: {
-  color: '#000',  
+  color: '#555555',  
   fontSize: 15,
-  
+  fontWeight: 'bold',
   textAlign: 'center',
 },
 
