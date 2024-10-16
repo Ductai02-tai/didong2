@@ -25,19 +25,23 @@ interface Product {
   photo: any;
   price: number;  
 }
+interface Category {
+  id: number; 
+  title: string;
+}
 
 const products: Product[] = [
   { id: 1, title: 'Bò Bía', description: 'Delicious spring rolls', photo: require('@/assets/images/Sanpham1.png'), price: 100000 },
   { id: 2, title: 'Chả Cá/miếng', description: 'Fish cakes', photo: require('@/assets/images/Sản phẩm 2.png'), price: 150000 },
   { id: 3, title: 'Xíu Mại/Viên', description: 'Pork meatballs', photo: require('@/assets/images/Sanpham3.png'), price: 200000 },
   { id: 4, title: 'Bánh Tằm Bì Xíu Mại', description: 'Noodles with pork', photo: require('@/assets/images/Sanpham4.png'), price: 250000 },
-  
 ];
-
 
 export default function HomeScreen() {
   const [isMenuVisible, setMenuVisible] = useState(false);
   const [isSearchVisible, setSearchVisible] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [error, setError] = useState('');
   const [currentBanner, setCurrentBanner] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const navigation = useNavigation<NavigationProp<any>>();
@@ -49,6 +53,25 @@ export default function HomeScreen() {
   const toggleSearch = () => {
     setSearchVisible(!isSearchVisible);
   };
+
+  const fetchCategories = async () => {
+    try {
+      const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3MjkwNzk2MzQsImV4cCI6MTcyOTE2NjAzNH0.fSVaiTYpBHctw352TUMNz0ifpyPY3-n7EhV_3L8kTQI'; // Replace with actual token management
+      const response = await axios.get('http://172.20.10.8:8080/api/categories', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      setError('Error fetching categories');
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const renderProduct = ({ item }: { item: Product }) => (
     <View style={styles.productContainer}>
@@ -108,7 +131,7 @@ export default function HomeScreen() {
             <Text style={styles.menuItem}>TRANG CHỦ</Text>
             <TouchableOpacity onPress={() => {
               toggleMenu(); // Đóng menu
-              navigation.navigate('ProductList'); // Điều hướng đến ProductList
+              navigation.navigate('ProductList');
             }}>
               <Text style={styles.menuItem}>SẢN PHẨM</Text>
             </TouchableOpacity>
@@ -123,7 +146,7 @@ export default function HomeScreen() {
       <FlatList
         data={products}
         renderItem={renderProduct}
-        keyExtractor={(item) => item.id.toString()} // Đảm bảo thuộc tính 'id' có sẵn
+        keyExtractor={(item) => item.id.toString()}
         numColumns={2}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.productList}
@@ -164,6 +187,19 @@ export default function HomeScreen() {
                 <Image source={require('@/assets/images/img_home_banner_3.png')} style={styles.homeBanner} />
               </View>
             </View>
+
+            {/* Menu Section */}
+            <View style={styles.menuSection}>
+              <Text style={styles.menuTitle}>Menu</Text>
+              <View style={styles.menuCategories}>
+                {categories.map((category) => (
+                  <TouchableOpacity key={category.id} style={styles.categoryButton}>
+                    <Text style={styles.categoryText}>{category.title}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
             <Text style={styles.featuredText}>Sản Phẩm bán chạy</Text>
           </View>
         }
@@ -171,6 +207,7 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
 
@@ -378,8 +415,9 @@ const styles = StyleSheet.create({
 
   },
 //------menu
+ 
 menuSection: {
-  marginTop: 30,
+  marginTop: 26,
   alignItems: 'center',
 },
 menuTitle: {
@@ -391,7 +429,8 @@ menuTitle: {
 menuCategories: {
   flexDirection: 'row',
   justifyContent: 'space-between',
-  width: '85%',
+  width: '103%',
+ 
 },
 categoryButton: {
   backgroundColor: '#fec524',  
@@ -404,9 +443,9 @@ categoryButton: {
   marginBottom: 35,
 },
 categoryText: {
-  color: '#000',  
+  color: '#555555',  
   fontSize: 15,
-  
+  fontWeight: 'bold',
   textAlign: 'center',
 },
 
