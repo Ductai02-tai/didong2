@@ -18,29 +18,27 @@ import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 
-// Định nghĩa kiểu sản phẩm
 interface Product {
-  id: number;  
+  id: number;
   title: string;
   description: string;
-  photo: string;
-  price: string; // Điều chỉnh kiểu nếu cần (number, string, v.v.)
+  photo: any;
+  price: number;  
 }
 
-
-interface Category {
-  id: number; 
-  title: string;
-}
+const products: Product[] = [
+  { id: 1, title: 'Bò Bía', description: 'Delicious spring rolls', photo: require('@/assets/images/Sanpham1.png'), price: 100000 },
+  { id: 2, title: 'Chả Cá/miếng', description: 'Fish cakes', photo: require('@/assets/images/Sản phẩm 2.png'), price: 150000 },
+  { id: 3, title: 'Xíu Mại/Viên', description: 'Pork meatballs', photo: require('@/assets/images/Sanpham3.png'), price: 200000 },
+  { id: 4, title: 'Bánh Tằm Bì Xíu Mại', description: 'Noodles with pork', photo: require('@/assets/images/Sanpham4.png'), price: 250000 },
   
+];
+
+
 export default function HomeScreen() {
   const [isMenuVisible, setMenuVisible] = useState(false);
   const [isSearchVisible, setSearchVisible] = useState(false);
   const [currentBanner, setCurrentBanner] = useState(0);
-  const [products, setProducts] = useState<Product[]>([]); // State để lưu trữ sản phẩm
-  const [categories, setCategories] = useState<Category[]>([]);
- 
-  const [error, setError] = useState(''); // State cho việc xử lý lỗi
   const scrollViewRef = useRef<ScrollView>(null);
   const navigation = useNavigation<NavigationProp<any>>();
 
@@ -52,43 +50,20 @@ export default function HomeScreen() {
     setSearchVisible(!isSearchVisible);
   };
 
+  const renderProduct = ({ item }: { item: Product }) => (
+    <View style={styles.productContainer}>
+      <Image source={item.photo} style={styles.productImage} />
+      <View style={styles.productInfo}>
+        <Text style={styles.productName}>{item.title}</Text>
+        <Text style={styles.productPrice}>{item.price.toLocaleString()}đ</Text>
+        <TouchableOpacity style={styles.orderButton}>
+          <Text style={styles.orderButtonText}>Đặt ngay</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   useEffect(() => {
-    // Gọi API để lấy sản phẩm
-    const fetchProducts = async () => {
-      try {
-        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3Mjg5Nzg5MTIsImV4cCI6MTcyOTA2NTMxMn0.UNj4mMxI2y__wJ_yqoUl4SLYXLXYjTuCAPPwhAdn1rc'; // Thay thế bằng quản lý token thực tế
-        const response = await axios.get('http://172.20.10.8:8080/api/products', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setProducts(response.data);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        setError('Error fetching products'); // Đặt thông báo lỗi
-      }
-    };
-
-    //API categori
-    const fetchCategories = async () => {
-      try {
-        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3Mjg5Nzg5MTIsImV4cCI6MTcyOTA2NTMxMn0.UNj4mMxI2y__wJ_yqoUl4SLYXLXYjTuCAPPwhAdn1rc'; // Thay thế bằng quản lý token thực tế
-        const response = await axios.get('http://172.20.10.8:8080/api/categories', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-       
-        setCategories(response.data);
-       } catch (error) {
-        console.error('Error fetching categories:', error);
-        setError('Error fetching categories');
-      }
-    };
-
-    fetchProducts();
-    fetchCategories();
-
     const interval = setInterval(() => {
       setCurrentBanner((prevBanner) => {
         const nextBanner = prevBanner === 3 ? 0 : prevBanner + 1;
@@ -102,56 +77,8 @@ export default function HomeScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  const imageMap: { [key: string]: any } = {
-    'Sanpham1.png': require('../../assets/images/Sanpham1.png'),
-    'Sanpham4.png': require('../../assets/images/Sanpham4.png'),
-    'banhmi.png': require('../../assets/images/banhmi.png'),
-    'Sanpham3.png': require('../../assets/images/Sanpham3.png'),
-    'Sanpham6.png': require('../../assets/images/Sanpham6.png'),
-    'nuocu.png': require('../../assets/images/nuocu.png'),
-    'banhmi77.png': require('../../assets/images/banhmi77.png'),
-    default: require('../../assets/images/logoba.png'), // Đường dẫn tương đối
-  };
-  
-  const renderProduct = ({ item }: { item: Product }) => {
-    const imageSource = imageMap[item.photo] || imageMap.default;
-  
-    return (
-      <TouchableOpacity
-        style={styles.productContainer}
-        onPress={() => navigation.navigate('ProductDetailScreen', { productId: item.id })} // Truyền ID sản phẩm
-      >
-        <Image
-          source={imageSource}
-          style={styles.productImage}
-          resizeMode="cover"
-        />
-        <View style={styles.productInfo}>
-          <Text style={styles.productName}>{item.title}</Text>
-          <View style={styles.productDetails}>
-            <Text style={styles.productPrice}>
-              {parseFloat(item.price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
-            </Text>
-            <TouchableOpacity style={styles.orderButton}>
-              <Text style={styles.orderButtonText}>Đặt món +</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-  
-  
-
-  
-  
-  
-  
-  
-
-
   return (
-    <View style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }}>
       {/* Header */}
       <View style={styles.header}>
         <Image source={require('@/assets/images/logoba.png')} style={styles.Logo} />
@@ -175,32 +102,31 @@ export default function HomeScreen() {
         </View>
       )}
 
-<Modal transparent={true} visible={isMenuVisible} animationType="slide">
-  <TouchableOpacity style={styles.modalBackground} onPress={toggleMenu}>
-    <View style={styles.menu}>
-      <Text style={styles.menuItem}>TRANG CHỦ</Text>
-      <TouchableOpacity onPress={() => {
-        toggleMenu(); // Đóng menu
-        navigation.navigate('ProductList'); // Điều hướng đến ProductList
-      }}>
-        <Text style={styles.menuItem}>SẢN PHẨM</Text>
-      </TouchableOpacity>
-      <Text style={styles.menuItem}>GIỚI THIỆU</Text>
-      <Text style={styles.menuItem}>LIÊN HỆ</Text>
-      <Text style={styles.menuItem}>TUYỂN DỤNG</Text>
-    </View>
-  </TouchableOpacity>
-</Modal>
-
+      <Modal transparent={true} visible={isMenuVisible} animationType="slide">
+        <TouchableOpacity style={styles.modalBackground} onPress={toggleMenu}>
+          <View style={styles.menu}>
+            <Text style={styles.menuItem}>TRANG CHỦ</Text>
+            <TouchableOpacity onPress={() => {
+              toggleMenu(); // Đóng menu
+              navigation.navigate('ProductList'); // Điều hướng đến ProductList
+            }}>
+              <Text style={styles.menuItem}>SẢN PHẨM</Text>
+            </TouchableOpacity>
+            <Text style={styles.menuItem}>GIỚI THIỆU</Text>
+            <Text style={styles.menuItem}>LIÊN HỆ</Text>
+            <Text style={styles.menuItem}>TUYỂN DỤNG</Text>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Main Content */}
       <FlatList
-         data={products}
-         renderItem={renderProduct}
-         keyExtractor={(item) => item.id.toString()} // Đảm bảo thuộc tính 'id' có sẵn
-         numColumns={2}
-         showsVerticalScrollIndicator={false}
-         contentContainerStyle={styles.productList}
+        data={products}
+        renderItem={renderProduct}
+        keyExtractor={(item) => item.id.toString()} // Đảm bảo thuộc tính 'id' có sẵn
+        numColumns={2}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.productList}
         ListHeaderComponent={
           <View style={{ flex: 1 }}>
             {/* Banners */}
@@ -237,33 +163,19 @@ export default function HomeScreen() {
                 <Image source={require('@/assets/images/img_home_banner_1.png')} style={styles.homeBanner} />
                 <Image source={require('@/assets/images/img_home_banner_3.png')} style={styles.homeBanner} />
               </View>
-             {/* Menu Section */}
-            <View style={styles.menuSection}>
-              <Text style={styles.menuTitle}>Menu</Text>
-              <View style={styles.menuCategories}>
-                {categories.map((category) => (
-                  <TouchableOpacity key={category.id} style={styles.categoryButton}>
-                    <Text style={styles.categoryText}>{category.title}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
             </View>
-           
-
-            </View>
-
             <Text style={styles.featuredText}>Sản Phẩm bán chạy</Text>
           </View>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
 
   header: {
-    height: 95,
+    height: 75,
     backgroundColor: 'black',
     flexDirection: 'row',
     alignItems: 'center',
@@ -272,17 +184,16 @@ const styles = StyleSheet.create({
 
   },
 
-  Logo: {
+   Logo: {
     width: 130,
     height: 50,
-    marginTop: 20,
-
+    marginTop: 8,
   },
   headerRight: {
-    marginTop: 25,
+    marginTop: 5,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
+    padding: 20,
   },
   searchBar: {
     backgroundColor: '#f0f0f0',
@@ -493,9 +404,9 @@ categoryButton: {
   marginBottom: 35,
 },
 categoryText: {
-  color: '#555555',  
+  color: '#000',  
   fontSize: 15,
-  fontWeight: 'bold',
+  
   textAlign: 'center',
 },
 

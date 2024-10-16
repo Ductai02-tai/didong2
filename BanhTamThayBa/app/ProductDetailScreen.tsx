@@ -29,7 +29,7 @@ const ProductDetailScreen = () => {
   useEffect(() => {
     const fetchProductDetail = async () => {
       try {
-        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3Mjg5Nzg5MTIsImV4cCI6MTcyOTA2NTMxMn0.UNj4mMxI2y__wJ_yqoUl4SLYXLXYjTuCAPPwhAdn1rc'; // Thay thế bằng token thực tế
+        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3MjkwNzk2MzQsImV4cCI6MTcyOTE2NjAzNH0.fSVaiTYpBHctw352TUMNz0ifpyPY3-n7EhV_3L8kTQI'; // Thay thế bằng token thực tế
         const response = await axios.get(`http://172.20.10.8:8080/api/products/${productId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
