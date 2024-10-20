@@ -81,13 +81,13 @@ export default function ProductList() {
           try {
             const imageResponse = await axios.get(
                 `http://172.20.10.8:8080/api/product/${product.id}/image`,
-                { headers: { Authorization: `Bearer ${token}` }, responseType: "blob" } // Add the token here
+                { headers: { Authorization: `Bearer ${token}` }, responseType: "blob" }
             );
             const imageUrl = URL.createObjectURL(imageResponse.data);
-            return { ...product, imageUrl }; // Use imageUrl to display the image
+            return { ...product, imageUrl }; 
           } catch (error) {
             console.error("Error fetching image for product ID:", product.id, error);
-            return { ...product, imageUrl: "placeholder-image-url" }; // Handle image error
+            return { ...product, imageUrl: "placeholder-image-url" };  
           }
         }));
   
