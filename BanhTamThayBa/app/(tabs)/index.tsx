@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import * as Font from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 import {
   View,
   Text,
@@ -15,7 +17,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import axios from 'axios';
+import FooterApp from '../FooterApp';
 
+const loadFonts = async () => {
+  await Font.loadAsync({
+    'Refile': require('../../assets/fonts/Refile.otf'),  
+  });
+};
 const { width } = Dimensions.get('window');
 
 interface Product {
@@ -45,6 +53,7 @@ export default function HomeScreen() {
   const [currentBanner, setCurrentBanner] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const navigation = useNavigation<NavigationProp<any>>();
+  const [fontsLoaded, setFontsLoaded] = useState(false);
 
   const toggleMenu = () => {
     setMenuVisible(!isMenuVisible);
@@ -56,7 +65,7 @@ export default function HomeScreen() {
 
   const fetchCategories = async () => {
     try {
-      const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3MjkwNzk2MzQsImV4cCI6MTcyOTE2NjAzNH0.fSVaiTYpBHctw352TUMNz0ifpyPY3-n7EhV_3L8kTQI'; // Replace with actual token management
+      const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3Mjk0MzI2MzMsImV4cCI6MTcyOTUxOTAzM30.zFi-aOuZepfmYcmHUdDUogTd4aAjpszIw2XjHmlFtk4'; // Replace with actual token management
       const response = await axios.get('http://172.20.10.8:8080/api/categories', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -70,21 +79,16 @@ export default function HomeScreen() {
   };
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    const loadResources = async () => {
+      await SplashScreen.preventAutoHideAsync(); // Ngăn màn hình splash tự ẩn
+      await loadFonts();
+      setFontsLoaded(true);
+      await SplashScreen.hideAsync(); // Ẩn màn hình splash sau khi tải xong
+    };
 
-  const renderProduct = ({ item }: { item: Product }) => (
-    <View style={styles.productContainer}>
-      <Image source={item.photo} style={styles.productImage} />
-      <View style={styles.productInfo}>
-        <Text style={styles.productName}>{item.title}</Text>
-        <Text style={styles.productPrice}>{item.price.toLocaleString()}đ</Text>
-        <TouchableOpacity style={styles.orderButton}>
-          <Text style={styles.orderButtonText}>Đặt ngay</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+    fetchCategories(); // Fetch categories only once on mount
+    loadResources(); // Load fonts and handle splash screen
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -100,8 +104,30 @@ export default function HomeScreen() {
     return () => clearInterval(interval);
   }, []);
 
+  if (!fontsLoaded) {
+    return null; // Trả về null trong khi đang tải
+  }
+
+
+
+  const renderProduct = ({ item }: { item: Product }) => (
+    <View style={styles.productContainer}>
+      <Image source={item.photo} style={styles.productImage} />
+      <View style={styles.productInfo}>
+        <Text style={styles.productName}>{item.title}</Text>
+        <Text style={styles.productPrice}>{item.price.toLocaleString()}đ</Text>
+        <TouchableOpacity style={styles.orderButton}>
+          <Text style={styles.orderButtonText}>Đặt ngay</Text>
+        </TouchableOpacity>
+      </View>
+      
+    </View>
+    
+  );
+           
   return (
     <SafeAreaView style={{ flex: 1 }}>
+
       {/* Header */}
       <View style={styles.header}>
         <Image source={require('@/assets/images/logoba.png')} style={styles.Logo} />
@@ -200,11 +226,18 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <Text style={styles.featuredText}>Sản Phẩm bán chạy</Text>
+            <Text style={styles.featuredText}>
+            Sản Phẩm <Text style={styles.textYellow}> Bán Chạy</Text>
+            </Text>
+
           </View>
+          
         }
+        ListFooterComponent={<FooterApp />} // Add FooterApp here
       />
+        
     </SafeAreaView>
+    
   );
 }
 
@@ -219,6 +252,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 1,
 
+  },
+  textYellow: {
+    color: '#fec524',
+    fontSize: 23,
+    fontFamily: 'Refile',
+      
   },
 
    Logo: {
@@ -288,7 +327,8 @@ const styles = StyleSheet.create({
     fontSize: 23,
     fontWeight: 'bold',
     marginBottom: 47,
-    textAlign: 'center'
+    textAlign: 'center',
+    fontFamily: 'Refile'
   },
   //----
   iconContainer: {
@@ -313,16 +353,19 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   featuredText: {
-    fontSize: 25,
+    fontSize: 23,
     fontWeight: 'bold',
     marginVertical: 10,
-    marginBottom: 20,
+    marginBottom: 30,
+    fontFamily: 'Refile',
+     textAlign: 'center',
   },
   //-----
   productList: {
     paddingHorizontal: 10,
     paddingBottom: 20,
     justifyContent: 'center',  
+    marginBottom: 25,
   },
   
   productContainer: {
@@ -425,6 +468,7 @@ menuTitle: {
   fontWeight: 'bold',
   marginBottom: 20,
   textAlign: 'center',
+  fontFamily: 'Refile'
 },
 menuCategories: {
   flexDirection: 'row',

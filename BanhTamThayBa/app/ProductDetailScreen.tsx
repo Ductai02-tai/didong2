@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Modal,Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Modal, Dimensions } from 'react-native';
 import axios from 'axios';
 import { useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,24 +7,14 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 const { width } = Dimensions.get('window');
- 
+
 interface RouteParams {
   productId: string; 
 }
+
 type RootStackParamList = {
   ProductDetailScreen: { productId: number };
   CartScreen: undefined;
-};
- 
-const imageMap: { [key: string]: any } = {
-  'Sanpham1.png': require('../assets/images/Sanpham1.png'),
-  'Sanpham4.png': require('../assets/images/Sanpham4.png'),
-  'banhmi.png': require('../assets/images/banhmi.png'),
-  'Sanpham3.png': require('../assets/images/Sanpham3.png'),
-  'Sanpham6.png': require('../assets/images/Sanpham6.png'),
-  'nuocu.png': require('../assets/images/nuocu.png'),
-  'banhmi77.png': require('../assets/images/banhmi77.png'),
-  default: require('../assets/images/logoba.png'),  
 };
 
 const ProductDetailScreen = () => {
@@ -35,8 +25,8 @@ const ProductDetailScreen = () => {
   const [error, setError] = useState('');
   const [isMenuVisible, setMenuVisible] = useState(false);
   const [quantity, setQuantity] = useState<number>(1);  
+  const [imageUrl, setImageUrl] = useState<string | null>(null); // Cập nhật state imageUrl
 
-  
   const toggleMenu = () => {
     setMenuVisible(!isMenuVisible);
   };
@@ -44,13 +34,24 @@ const ProductDetailScreen = () => {
   useEffect(() => {
     const fetchProductDetail = async () => {
       try {
-        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3MjkwNzk2MzQsImV4cCI6MTcyOTE2NjAzNH0.fSVaiTYpBHctw352TUMNz0ifpyPY3-n7EhV_3L8kTQI'; // Thay thế bằng token thực tế
-        const response = await axios.get(`http://172.20.10.8:8080/api/products/${productId}`, {
+        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3Mjk0MzI2MzMsImV4cCI6MTcyOTUxOTAzM30.zFi-aOuZepfmYcmHUdDUogTd4aAjpszIw2XjHmlFtk4'; // Thay thế bằng token thực tế
+        const response = await axios.get(`http://172.20.10.8:8080/api/product/${productId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+
         setProduct(response.data);
+
+        // Gọi API để lấy ảnh sản phẩm
+        const imageResponse = await axios.get(
+          `http://172.20.10.8:8080/api/product/${productId}/image`,
+          { headers: { Authorization: `Bearer ${token}` }, responseType: "blob" }
+        );
+
+        const imageBlob = URL.createObjectURL(imageResponse.data);
+        setImageUrl(imageBlob); // Đặt URL của ảnh vào state imageUrl
+
       } catch (error) {
         console.error('Error fetching product detail:', error);
         setError('Error fetching product detail');
@@ -76,25 +77,21 @@ const ProductDetailScreen = () => {
     );
   }
 
-  // Lấy hình ảnh từ imageMap
-  const imageSource = imageMap[product.photo] || imageMap.default;
- // Xử lý tăng giảm số lượng sản phẩm
- const handleIncrease = () => {
-  setQuantity((prevQuantity) => prevQuantity + 1);
-};
+  const handleIncrease = () => {
+    setQuantity((prevQuantity) => prevQuantity + 1);
+  };
 
-const handleDecrease = () => {
-  if (quantity > 1) {
-    setQuantity((prevQuantity) => prevQuantity - 1);
-  }
-};
+  const handleDecrease = () => {
+    if (quantity > 1) {
+      setQuantity((prevQuantity) => prevQuantity - 1);
+    }
+  };
+
   return (
     <View style={{ flex: 1 }}>
-
-<View style={styles.header}>
+      <View style={styles.header}>
         <Image source={require('@/assets/images/logoba.png')} style={styles.Logo} />
         <View style={styles.headerRight}>
-          
           <TouchableOpacity onPress={() => navigation.navigate('CartScreen')}>
             <Ionicons name="cart-outline" size={24} color="white" style={{ marginLeft: 15 }} />
           </TouchableOpacity>
@@ -103,7 +100,6 @@ const handleDecrease = () => {
           </TouchableOpacity>
         </View>
       </View>
-
     
       <Modal transparent={true} visible={isMenuVisible} animationType="slide">
         <TouchableOpacity style={styles.modalBackground} onPress={toggleMenu}>
@@ -117,9 +113,14 @@ const handleDecrease = () => {
         </TouchableOpacity>
       </Modal>
 
+      {/* Kiểm tra và chỉ render ảnh nếu imageUrl không trống */}
+      {imageUrl ? (
+        <Image source={{ uri: imageUrl }} style={styles.productImage} />
+      ) : (
+        <Text>Không có ảnh sản phẩm</Text>
+      )}
 
-      <Image source={imageSource} style={styles.productImage} />
-      <Text style={styles.productTitle}>{product.title}</Text>
+      <Text style={styles.productTitle}>{product.name}</Text>
       <Text style={styles.productPrice}>
         {parseFloat(product.price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
       </Text>
@@ -191,7 +192,7 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: '100%',
-    height: 400,
+    height: 430,
     marginBottom: 16,
   },
   productTitle: {

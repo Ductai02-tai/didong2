@@ -2,22 +2,32 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Ionicons } from '@expo/vector-icons';
-import { TextInput } from 'react-native'; 
 import axios from 'axios';
+import * as Font from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { Ionicons } from '@expo/vector-icons';
+import { TextInput } from 'react-native-gesture-handler';
+
+const loadFonts = async () => {
+  await Font.loadAsync({
+    'Refile': require('./../assets/fonts/Refile.otf'),
+  });
+};
 
 const { width } = Dimensions.get('window');
 
 type Product = {
   id: number;
-  title: string;
-  photo: string;
+  name: string;
   price: string; 
+  imageUrl?: string; // Thêm trường imageUrl nếu cần
 };
+
 interface Category {
   id: number; 
   title: string;
 }
+
 type RootStackParamList = {
   ProductDetailScreen: { productId: number };
   CartScreen: undefined;
@@ -31,6 +41,7 @@ export default function ProductList() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState('');
   const scrollViewRef = useRef<ScrollView>(null);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
 
   const toggleMenu = () => {
     setMenuVisible(!isMenuVisible);
@@ -41,24 +52,54 @@ export default function ProductList() {
   };
 
   useEffect(() => {
+    const loadResources = async () => {
+      try {
+        await SplashScreen.preventAutoHideAsync();
+        await loadFonts();
+        setFontsLoaded(true);
+        await SplashScreen.hideAsync();
+      } catch (e) {
+        console.warn(e);
+      }
+    };
+
+    loadResources();
+  }, []);
+
+  useEffect(() => {
+    const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3Mjk0MzI2MzMsImV4cCI6MTcyOTUxOTAzM30.zFi-aOuZepfmYcmHUdDUogTd4aAjpszIw2XjHmlFtk4';
+  
     const fetchProducts = async () => {
       try {
-        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3MjkwNzk2MzQsImV4cCI6MTcyOTE2NjAzNH0.fSVaiTYpBHctw352TUMNz0ifpyPY3-n7EhV_3L8kTQI'; // Replace with actual token management
         const response = await axios.get('http://172.20.10.8:8080/api/products', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        setProducts(response.data);
+  
+        const productsWithImages = await Promise.all(response.data.map(async (product: Product) => {
+          try {
+            const imageResponse = await axios.get(
+                `http://172.20.10.8:8080/api/product/${product.id}/image`,
+                { headers: { Authorization: `Bearer ${token}` }, responseType: "blob" } // Add the token here
+            );
+            const imageUrl = URL.createObjectURL(imageResponse.data);
+            return { ...product, imageUrl }; // Use imageUrl to display the image
+          } catch (error) {
+            console.error("Error fetching image for product ID:", product.id, error);
+            return { ...product, imageUrl: "placeholder-image-url" }; // Handle image error
+          }
+        }));
+  
+        setProducts(productsWithImages);
       } catch (error) {
         console.error('Error fetching products:', error);
         setError('Error fetching products');
       }
     };
-
+  
     const fetchCategories = async () => {
       try {
-        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3MjkwNzk2MzQsImV4cCI6MTcyOTE2NjAzNH0.fSVaiTYpBHctw352TUMNz0ifpyPY3-n7EhV_3L8kTQI'; // Replace with actual token management
         const response = await axios.get('http://172.20.10.8:8080/api/categories', {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -70,36 +111,33 @@ export default function ProductList() {
         setError('Error fetching categories');
       }
     };
-
+  
     fetchProducts();
     fetchCategories();
   }, []);
-
-  const imageMap: { [key: string]: any } = {
-    'Sanpham1.png': require('../assets/images/Sanpham1.png'),
-    'Sanpham4.png': require('../assets/images/Sanpham4.png'),
-    'banhmi.png': require('../assets/images/banhmi.png'),
-    'Sanpham3.png': require('../assets/images/Sanpham3.png'),
-    'Sanpham6.png': require('../assets/images/Sanpham6.png'),
-    'nuocu.png': require('../assets/images/nuocu.png'),
-    'banhmi77.png': require('../assets/images/banhmi77.png'),
-    default: require('../assets/images/logoba.png'),
-  };
+  
+  
+  if (!fontsLoaded) {
+    return null;
+  }
 
   const renderProduct = ({ item }: { item: Product }) => {
-    const imageSource = imageMap[item.photo] || imageMap.default; 
     return (
       <TouchableOpacity
         style={styles.productContainer}
         onPress={() => navigation.navigate('ProductDetailScreen', { productId: item.id })}
       >
-        <Image
-          source={imageSource}
-          style={styles.productImage}
-          resizeMode="cover"
-        />
+        {item.imageUrl ? (
+          <Image
+            source={{ uri: item.imageUrl }}  
+            style={styles.productImage}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.placeholderImage} />
+        )}
         <View style={styles.productInfo}>
-          <Text style={styles.productName}>{item.title}</Text>
+          <Text style={styles.productName}>{item.name}</Text>
           <View style={styles.productDetails}>
             <Text style={styles.productPrice}>
               {parseFloat(item.price).toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}
@@ -151,13 +189,15 @@ export default function ProductList() {
       </Modal>
 
       {/* Product Title */}
-      <Text style={styles.productTitle}>Sản Phẩm</Text>
+      <Text style={styles.productTitle}>
+      Tất Cả <Text style={styles.textYellow}> Sản Phẩm</Text>
+        </Text>
 
       <FlatList
         data={products}
         renderItem={renderProduct}
         keyExtractor={(item) => item.id.toString()}
-        numColumns={2} // Set number of columns to 2
+        numColumns={2}
         contentContainerStyle={styles.container}
       />
 
@@ -167,9 +207,25 @@ export default function ProductList() {
   );
 }
 
+
+
 const styles = StyleSheet.create({
   container: {
     padding: 10,
+  },
+  textYellow: {
+    color: '#fec524',
+    fontSize: 25,
+    fontFamily: 'Refile',
+      
+  },
+  placeholderImage: {
+    width: width / 2 - 20,  
+    height: 150,  
+    backgroundColor: '#ccc', 
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5, 
   },
   header: {
     height: 75,
@@ -178,12 +234,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 1,
+    marginBottom: 30,
   },
   productTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginVertical: 10,
+    fontFamily: 'Refile',
+    marginBottom: 30,
   },
   productList: {
     paddingHorizontal: 10,
