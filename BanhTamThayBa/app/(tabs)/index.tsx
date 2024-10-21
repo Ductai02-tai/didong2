@@ -16,14 +16,16 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
-import axios from 'axios';
+
 import FooterApp from '../FooterApp';
+import MenuCate from '../MenuCate';
 
 const loadFonts = async () => {
   await Font.loadAsync({
     'Refile': require('../../assets/fonts/Refile.otf'),  
   });
 };
+
 const { width } = Dimensions.get('window');
 
 interface Product {
@@ -32,10 +34,6 @@ interface Product {
   description: string;
   photo: any;
   price: number;  
-}
-interface Category {
-  id: number; 
-  title: string;
 }
 
 const products: Product[] = [
@@ -48,8 +46,6 @@ const products: Product[] = [
 export default function HomeScreen() {
   const [isMenuVisible, setMenuVisible] = useState(false);
   const [isSearchVisible, setSearchVisible] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [error, setError] = useState('');
   const [currentBanner, setCurrentBanner] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const navigation = useNavigation<NavigationProp<any>>();
@@ -63,30 +59,14 @@ export default function HomeScreen() {
     setSearchVisible(!isSearchVisible);
   };
 
-  const fetchCategories = async () => {
-    try {
-      const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3Mjk0MzI2MzMsImV4cCI6MTcyOTUxOTAzM30.zFi-aOuZepfmYcmHUdDUogTd4aAjpszIw2XjHmlFtk4'; // Replace with actual token management
-      const response = await axios.get('http://172.20.10.8:8080/api/categories', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setCategories(response.data);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      setError('Error fetching categories');
-    }
-  };
-
   useEffect(() => {
     const loadResources = async () => {
-      await SplashScreen.preventAutoHideAsync(); // Ngăn màn hình splash tự ẩn
+      await SplashScreen.preventAutoHideAsync();  
       await loadFonts();
       setFontsLoaded(true);
-      await SplashScreen.hideAsync(); // Ẩn màn hình splash sau khi tải xong
+      await SplashScreen.hideAsync();  
     };
 
-    fetchCategories(); // Fetch categories only once on mount
     loadResources(); // Load fonts and handle splash screen
   }, []);
 
@@ -105,10 +85,8 @@ export default function HomeScreen() {
   }, []);
 
   if (!fontsLoaded) {
-    return null; // Trả về null trong khi đang tải
+    return null;  
   }
-
-
 
   const renderProduct = ({ item }: { item: Product }) => (
     <View style={styles.productContainer}>
@@ -120,14 +98,11 @@ export default function HomeScreen() {
           <Text style={styles.orderButtonText}>Đặt ngay</Text>
         </TouchableOpacity>
       </View>
-      
     </View>
-    
   );
-           
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
-
       {/* Header */}
       <View style={styles.header}>
         <Image source={require('@/assets/images/logoba.png')} style={styles.Logo} />
@@ -185,7 +160,6 @@ export default function HomeScreen() {
               <Image source={require('@/assets/images/slideshow_3.png')} style={styles.banner} />
               <Image source={require('@/assets/images/slideshow_4.png')} style={styles.banner} />
             </ScrollView>
-
             <Image source={require('@/assets/images/img_home_welcome.png')} style={styles.welcomeImage} resizeMode="contain" />
             <Text style={styles.welcomeText}>Chào mừng đến với Bánh Tằm Thầy Ba</Text>
             <View style={styles.iconContainer}>
@@ -215,29 +189,23 @@ export default function HomeScreen() {
             </View>
 
             {/* Menu Section */}
-            <View style={styles.menuSection}>
-              <Text style={styles.menuTitle}>Menu</Text>
-              <View style={styles.menuCategories}>
-                {categories.map((category) => (
-                  <TouchableOpacity key={category.id} style={styles.categoryButton}>
-                    <Text style={styles.categoryText}>{category.title}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+            {<MenuCate />}  
+     {/* Banner with Button */}
+     <View style={styles.bannerWithButtonContainer}>
+              <Image source={require('@/assets/images/slideshow_4.png')} style={styles.fullWidthImage} />
+              <TouchableOpacity style={styles.seeMoreButton}>
+                <Text style={styles.seeMoreButtonText}>Xem thêm</Text>
+              </TouchableOpacity>
             </View>
 
             <Text style={styles.featuredText}>
-            Sản Phẩm <Text style={styles.textYellow}> Bán Chạy</Text>
+              Sản Phẩm <Text style={styles.textYellow}> Bán Chạy</Text>
             </Text>
-
           </View>
-          
         }
         ListFooterComponent={<FooterApp />} // Add FooterApp here
       />
-        
     </SafeAreaView>
-    
   );
 }
 
@@ -457,40 +425,31 @@ const styles = StyleSheet.create({
     borderColor: '#FFD700',
 
   },
-//------menu
+//----
+bannerWithButtonContainer: {
+  position: 'relative',
+  marginVertical: 20,
+},
+fullWidthImage: {
+  width: '100%',
+  height: 150,
+},
+seeMoreButton: {
+  position: 'absolute',
+  top: '75%',  
+  left: '50%',  
  
-menuSection: {
-  marginTop: 26,
-  alignItems: 'center',
-},
-menuTitle: {
-  fontSize: 25,
-  fontWeight: 'bold',
-  marginBottom: 20,
-  textAlign: 'center',
-  fontFamily: 'Refile'
-},
-menuCategories: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  width: '103%',
- 
-},
-categoryButton: {
-  backgroundColor: '#fec524',  
+  transform: [{ translateX: -50 }, { translateY: -50 }],  
+  backgroundColor: '#FFD700',  
   paddingVertical: 10,
-  paddingHorizontal: 25,
-  borderRadius: 20,  
-  borderWidth: 1,
-  borderColor: '#FFD700',  
-  marginHorizontal: 5,  
-  marginBottom: 35,
+  paddingHorizontal: 20,
+  borderRadius: 5,
 },
-categoryText: {
-  color: '#555555',  
-  fontSize: 15,
+
+seeMoreButtonText: {
+  color: '#000', 
   fontWeight: 'bold',
-  textAlign: 'center',
+  fontSize: 16,
 },
 
 });

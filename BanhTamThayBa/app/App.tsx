@@ -9,6 +9,7 @@ import ProductDetailScreen from './ProductDetailScreen';
 import CartScreen from './CartScreen';
 import ProductList from './ProductList';
 import FooterApp from './FooterApp';
+import MenuCate from './MenuCate';
 
 const Stack = createStackNavigator();
 
@@ -26,6 +27,7 @@ export default function App() {
           <Stack.Screen name="CartScreen" component={CartScreen} />
           <Stack.Screen name="ProductList" component={ProductList} />
           <Stack.Screen name="FooterApp" component={FooterApp} />
+          <Stack.Screen name="MenuCate" component={MenuCate} />
         </Stack.Navigator>
       </NavigationContainer>
     </GestureHandlerRootView>

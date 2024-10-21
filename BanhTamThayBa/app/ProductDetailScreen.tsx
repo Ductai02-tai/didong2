@@ -34,7 +34,7 @@ const ProductDetailScreen = () => {
   useEffect(() => {
     const fetchProductDetail = async () => {
       try {
-        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3Mjk0MzI2MzMsImV4cCI6MTcyOTUxOTAzM30.zFi-aOuZepfmYcmHUdDUogTd4aAjpszIw2XjHmlFtk4'; // Thay thế bằng token thực tế
+        const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJuZ3V5ZW5uZ3V5ZW5kdWN0YWkiLCJpYXQiOjE3Mjk0OTk4MDAsImV4cCI6MTcyOTU4NjIwMH0.0ucIvTIeRRaoJCvt0XKsze-2aprU_ktk8LIi48T0X6g'; 
         const response = await axios.get(`http://172.20.10.8:8080/api/product/${productId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -50,7 +50,7 @@ const ProductDetailScreen = () => {
         );
 
         const imageBlob = URL.createObjectURL(imageResponse.data);
-        setImageUrl(imageBlob); // Đặt URL của ảnh vào state imageUrl
+        setImageUrl(imageBlob);  
 
       } catch (error) {
         console.error('Error fetching product detail:', error);
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
   },
   productImage: {
     width: '100%',
-    height: 430,
+    height: 390,
     marginBottom: 16,
   },
   productTitle: {

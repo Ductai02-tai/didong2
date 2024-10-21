@@ -24,7 +24,7 @@ export default function FooterApp() {
   }, []);
 
   if (!fontsLoaded) {
-    return null; // Trả về null trong khi đang tải
+    return null; 
   }
 
   return (
